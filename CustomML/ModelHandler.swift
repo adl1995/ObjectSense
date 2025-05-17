@@ -13,7 +13,8 @@ import UIKit
 
 class ModelHandler {
     private var model: VNCoreMLModel
-    
+    var modelResult: [VNRecognizedObjectObservation]?
+
     init() {
         guard let model = try? VNCoreMLModel(for: Yolo(configuration: MLModelConfiguration()).model) else {
             print("Error loading model")
@@ -40,7 +41,7 @@ class ModelHandler {
 
         func handleYoloResults(request: VNRequest, error: Error?) {
             guard let results = request.results as? [VNRecognizedObjectObservation] else { return }
-            
+            self.modelResult = results
             for observation in results {
                 let bestMatch = observation.labels[0]
                 print("Label: \(bestMatch.identifier), Confidence: \(bestMatch.confidence)")

@@ -13,7 +13,6 @@ import PhotosUI
 struct ContentView: View {
     @State var selectedPhotos: PhotosPickerItem?
     @State var selectedImage: UIImage?
-    @State var modelResult: VNRecognizedObjectObservation?
     @State var model: ModelHandler = ModelHandler()
     
     var body: some View {
@@ -24,22 +23,23 @@ struct ContentView: View {
             Text("Hello, world!")
             
             Button ("Predict") {
-                if let image = UIImage(named: "twinlake") {
+                if let image = UIImage(named: "437A8396") {
                     self.model = ModelHandler()
                     model.predict(image: image)
                 }
             }
             
-            if let input = selectedImage {
+            if let results = model.modelResult, let input = selectedImage {
                 AnnotatedImageView(
                     image: input,
-                    observations: [VNRecognizedObjectObservation]() // Placeholder for observations
+                    observations: results
                 )
-                    
-//                Image(uiImage: input)
-//                    .resizable()
-//                    .scaledToFit()
-//                    .frame(width: 300, height: 300)
+            }
+            else if let input = selectedImage {
+                Image(uiImage: input)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 300, height: 300)
             } else {
                 Text("No image selected")
             }

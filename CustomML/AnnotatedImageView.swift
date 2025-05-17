@@ -40,6 +40,7 @@ struct AnnotatedImageView: View {
     func boundingBoxRect(from normalized: CGRect, in size: CGSize) -> CGRect {
         let x = normalized.origin.x * size.width
         let y = (1 - normalized.origin.y - normalized.height) * size.height
+//        let y = (normalized.origin.y + normalized.height) * size.height
         let width = normalized.width * size.width
         let height = normalized.height * size.height
         return CGRect(x: x, y: y, width: width, height: height)
