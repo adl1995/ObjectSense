@@ -39,7 +39,6 @@ struct ContentView: View {
                 Image(uiImage: input)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 300, height: 300)
             } else {
                 Text("No image selected")
             }
@@ -57,7 +56,6 @@ struct ContentView: View {
                             print("Failed to load image")
                             return
                         }
-//                        let model = ModelHandler()
                         self.model.predict(image: uiImage)
                         selectedImage = uiImage
                     }

@@ -9,11 +9,31 @@ import Foundation
 import Vision
 import CoreML
 import UIKit
+import UIKit
 
+extension UIImage {
+    func resized(to targetSize: CGSize) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = self.scale
+        format.opaque = false
+        
+        let renderer = UIGraphicsImageRenderer(size: targetSize, format: format)
+        return renderer.image { _ in
+            self.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+    }
+    
+    func cropped(to rect: CGRect) -> UIImage? {
+            guard let cgImage = self.cgImage?.cropping(to: rect) else { return nil }
+            return UIImage(cgImage: cgImage)
+//            return UIImage(cgImage: cgImage, scale: self.scale, orientation: self.imageOrientation)
+        }
+}
 
 class ModelHandler {
     private var model: VNCoreMLModel
     var modelResult: [VNRecognizedObjectObservation]?
+    var extractedImages: [UIImage] = []
 
     init() {
         guard let model = try? VNCoreMLModel(for: Yolo(configuration: MLModelConfiguration()).model) else {
@@ -24,7 +44,8 @@ class ModelHandler {
     }
 
     func predict(image: UIImage) {
-        guard let cgImage = image.cgImage else {
+        let resizedImage = image.resized(to: CGSize(width: 384, height: 640))
+        guard let cgImage = resizedImage.cgImage else {
             print("Error converting UIImage to CGImage")
             return
         }
@@ -38,7 +59,6 @@ class ModelHandler {
             print("Error performing request: \(error)")
         }
 
-
         func handleYoloResults(request: VNRequest, error: Error?) {
             guard let results = request.results as? [VNRecognizedObjectObservation] else { return }
             self.modelResult = results
@@ -48,7 +68,6 @@ class ModelHandler {
                 print("Bounding Box: \(observation.boundingBox)")
             }
         }
-
     }
 
 }
