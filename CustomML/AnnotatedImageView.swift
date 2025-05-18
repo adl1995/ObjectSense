@@ -10,8 +10,10 @@ import Vision
 
 struct AnnotatedImageView: View {
     let image: UIImage
-    @State var observations: [VNRecognizedObjectObservation]
+    let observations: [VNRecognizedObjectObservation]
+    @State var filteredObservations: [VNRecognizedObjectObservation] = []
 
+    
     var body: some View {
         GeometryReader { geo in
             let imageSize = image.size
@@ -27,7 +29,7 @@ struct AnnotatedImageView: View {
 
             ScrollView {
                 VStack(spacing: 16) {
-                    ForEach(observations, id: \.uuid) { observation in
+                    ForEach(filteredObservations, id: \.uuid) { observation in
                         let rect = boundingBoxInPixels(from: observation.boundingBox, imageSize: image.size)
                         let croppedImage = image.cropped(to: rect)
 
@@ -40,8 +42,8 @@ struct AnnotatedImageView: View {
                                         .cornerRadius(8)
 
                                     Button(action: {
-                                        if let index = observations.firstIndex(where: { $0.uuid == observation.uuid }) {
-                                            observations.remove(at: index)
+                                        if let index = filteredObservations.firstIndex(where: { $0.uuid == observation.uuid }) {
+                                            filteredObservations.remove(at: index)
                                         }
                                     }) {
                                         Image(systemName: "xmark.circle.fill")
@@ -66,6 +68,12 @@ struct AnnotatedImageView: View {
                     }
                 }
             }
+        }
+        .onChange(of: observations) { newValue in
+            filteredObservations = newValue
+        }
+        .onAppear {
+            filteredObservations = observations
         }
     }
     
