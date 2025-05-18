@@ -10,6 +10,7 @@ import Vision
 import CoreML
 import UIKit
 import UIKit
+import Photos
 
 extension UIImage {
     func resized(to targetSize: CGSize) -> UIImage {
@@ -70,4 +71,24 @@ class ModelHandler {
         }
     }
 
+    func saveImagesToLibrary(_ images: [UIImage]) {
+        PHPhotoLibrary.requestAuthorization { status in
+            guard status == .authorized || status == .limited else {
+                print("🚫 Photo Library access denied")
+                return
+            }
+
+            for image in images {
+                PHPhotoLibrary.shared().performChanges {
+                    PHAssetChangeRequest.creationRequestForAsset(from: image)
+                } completionHandler: { success, error in
+                    if success {
+                        print("✅ Image saved")
+                    } else {
+                        print("❌ Failed to save image:", error?.localizedDescription ?? "Unknown error")
+                    }
+                }
+            }
+        }
+    }
 }

@@ -9,12 +9,14 @@ import Vision
 import CoreML
 import SwiftUI
 import PhotosUI
+import Photos
 
 struct ContentView: View {
     @State var selectedPhotos: PhotosPickerItem?
     @State var selectedImage: UIImage?
     @State var model: ModelHandler = ModelHandler()
-    
+    @State private var croppedImages: [UIImage] = []
+
     var body: some View {
         VStack {
 //            Button ("Predict") {
@@ -28,6 +30,7 @@ struct ContentView: View {
                 AnnotatedImageView(
                     image: input,
                     observations: results,
+                    croppedImages: $croppedImages
                 )
             }
             else if let input = selectedImage {
@@ -55,7 +58,14 @@ struct ContentView: View {
                         selectedImage = uiImage
                     }
                 }
-                
+
+            
+            if !croppedImages.isEmpty {
+                Button("Save Images") {
+                    self.model.saveImagesToLibrary(croppedImages)
+                }
+                .padding()
+            }
         }
         .padding()
     }

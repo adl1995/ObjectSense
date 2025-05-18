@@ -12,7 +12,7 @@ struct AnnotatedImageView: View {
     let image: UIImage
     let observations: [VNRecognizedObjectObservation]
     @State var filteredObservations: [VNRecognizedObjectObservation] = []
-
+    @Binding var croppedImages: [UIImage]
     
     var body: some View {
         GeometryReader { geo in
@@ -32,6 +32,11 @@ struct AnnotatedImageView: View {
                     ForEach(filteredObservations, id: \.uuid) { observation in
                         let rect = boundingBoxInPixels(from: observation.boundingBox, imageSize: image.size)
                         let croppedImage = image.cropped(to: rect)
+
+//                        croppedImages.append(croppedImage)
+//                        if let cropped = croppedImage, !croppedImages.contains(cropped) {
+//                            croppedImages.append(cropped)
+//                        }
 
                         VStack(alignment: .leading) {
                             if let croppedImage = croppedImage {
@@ -74,9 +79,18 @@ struct AnnotatedImageView: View {
         }
         .onAppear {
             filteredObservations = observations
+            updateCroppedImages(from: observations[0])
         }
     }
     
+    
+    func updateCroppedImages(from observation: VNRecognizedObjectObservation) {
+        let rect = boundingBoxInPixels(from: observation.boundingBox, imageSize: image.size)
+        if let cropped = image.cropped(to: rect), !croppedImages.contains(cropped) {
+            croppedImages.append(cropped)
+        }
+    }
+
     func boundingBoxRect(from normalized: CGRect, in imageSize: CGSize, offset: CGSize) -> CGRect {
         let x = normalized.origin.x * imageSize.width + offset.width
         let y = (1 - normalized.origin.y - normalized.height) * imageSize.height + offset.height
