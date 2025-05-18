@@ -10,8 +10,8 @@ import Vision
 
 struct AnnotatedImageView: View {
     let image: UIImage
-    let observations: [VNRecognizedObjectObservation]
-    
+    @State var observations: [VNRecognizedObjectObservation]
+
     var body: some View {
         GeometryReader { geo in
             let imageSize = image.size
@@ -19,55 +19,50 @@ struct AnnotatedImageView: View {
             let scale = min(containerSize.width / imageSize.width,
                             containerSize.height / imageSize.height)
             
-            let displaySize = CGSize(width: imageSize.width * scale,
-                                     height: imageSize.height * scale)
+//            let displaySize = CGSize(width: imageSize.width * scale,
+//                                     height: imageSize.height * scale)
             
-            let xOffset = (containerSize.width - displaySize.width) / 2
-            let yOffset = (containerSize.height - displaySize.height) / 2
-            
-//            ZStack {
-//                Image(uiImage: image)
-//                    .resizable()
-//                    .scaledToFit()
-//                    .frame(width: displaySize.width, height: displaySize.height)
-//                    .position(x: containerSize.width / 2, y: containerSize.height / 2)
-//                
-//                ForEach(observations, id: \.uuid) { observation in
-//                    let rect = boundingBoxRect(
-//                        from: observation.boundingBox,
-//                        in: displaySize,
-//                        offset: CGSize(width: xOffset, height: yOffset)
-//                    )
-//                    
-//                    Rectangle()
-//                        .stroke(Color.red, lineWidth: 2)
-//                        .frame(width: rect.width, height: rect.height)
-//                        .position(x: rect.midX, y: rect.midY)
-//                    
-//                    Text(observation.labels.first?.identifier ?? "Unknown")
-//                        .foregroundColor(.white)
-//                        .background(Color.black.opacity(0.7))
-//                        .font(.caption)
-//                        .position(x: rect.midX, y: rect.minY - 10)
-//                }
-//            }
-            
+//            let xOffset = (containerSize.width - displaySize.width) / 2
+//            let yOffset = (containerSize.height - displaySize.height) / 2
+
             ScrollView {
-                VStack {
+                VStack(spacing: 16) {
                     ForEach(observations, id: \.uuid) { observation in
-                        
-                        let rect = boundingBoxInPixels(
-                            from: observation.boundingBox,
-                            imageSize: imageSize
-                        )
+                        let rect = boundingBoxInPixels(from: observation.boundingBox, imageSize: image.size)
                         let croppedImage = image.cropped(to: rect)
-                        
-                        
-                        Image(uiImage: croppedImage ?? UIImage())
-                            .resizable()
-                            .scaledToFit()
-//                            .frame(width: displaySize.width, height: displaySize.height)
-//                            .position(x: containerSize.width / 2, y: containerSize.height / 2)
+
+                        VStack(alignment: .leading) {
+                            if let croppedImage = croppedImage {
+                                ZStack(alignment: Alignment.topLeading) {
+                                    Image(uiImage: croppedImage)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .cornerRadius(8)
+
+                                    Button(action: {
+                                        if let index = observations.firstIndex(where: { $0.uuid == observation.uuid }) {
+                                            observations.remove(at: index)
+                                        }
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.white)
+                                            .background(Color.black.opacity(0.7))
+                                            .clipShape(Circle())
+                                    }
+                                    .padding(8)
+                                }
+                            }
+
+                            Text(observation.labels.first?.identifier ?? "Unknown")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .padding(4)
+                                .background(Color.black.opacity(0.6))
+                                .foregroundColor(.white)
+                                .cornerRadius(4)
+                                .padding(.leading, 8)
+                        }
+                        .padding(.horizontal)
                     }
                 }
             }

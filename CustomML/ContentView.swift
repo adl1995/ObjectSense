@@ -17,22 +17,17 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-            
-            Button ("Predict") {
-                if let image = UIImage(named: "437A8396") {
-                    self.model = ModelHandler()
-                    model.predict(image: image)
-                }
-            }
+//            Button ("Predict") {
+//                if let image = UIImage(named: "437A8396") {
+//                    self.model = ModelHandler()
+//                    model.predict(image: image)
+//                }
+//            }
             
             if let results = model.modelResult, let input = selectedImage {
                 AnnotatedImageView(
                     image: input,
-                    observations: results
+                    observations: results,
                 )
             }
             else if let input = selectedImage {
