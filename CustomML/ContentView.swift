@@ -16,6 +16,7 @@ struct ContentView: View {
     @State var selectedImage: UIImage?
     @State var model: ModelHandler = ModelHandler()
     @State private var croppedImages: [UIImage] = []
+    @State private var triggerAnimation = 0
 
     var body: some View {
         VStack {
@@ -61,10 +62,32 @@ struct ContentView: View {
 
             
             if !croppedImages.isEmpty {
-                Button("Save Images") {
-                    self.model.saveImagesToLibrary(croppedImages)
+                HStack {
+                    Button(action: {
+                        self.model.saveImagesToLibrary(croppedImages)
+                        triggerAnimation += 1
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.down.circle")
+                                .symbolEffect(.bounce, value: triggerAnimation)
+                            Text("Save")
+                        }
+                    }
+                    .padding()
+                    
+                    
+                    Button(action: {
+                        model.modelResult = nil
+                        selectedImage = nil
+                        croppedImages = []
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise.circle")
+                            Text("Reset")
+                        }
+                    }
+                    .padding()
                 }
-                .padding()
             }
         }
         .padding()
