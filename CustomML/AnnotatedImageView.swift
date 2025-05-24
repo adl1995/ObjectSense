@@ -21,65 +21,10 @@ struct AnnotatedImageView: View {
                 .fontWeight(.bold)
                 .padding(.top)
 
-            GeometryReader { geo in
-                let imageSize = image.size
-                let containerSize = geo.size
-                let scale = min(containerSize.width / imageSize.width,
-                                containerSize.height / imageSize.height)
-                let displaySize = CGSize(width: imageSize.width * scale,
-                                         height: imageSize.height * scale)
-                let xOffset = (containerSize.width - displaySize.width) / 2
-                let yOffset = (containerSize.height - displaySize.height) / 2
+            detectedObjectsView()
 
-                ZStack {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: displaySize.width, height: displaySize.height)
-                        .position(x: containerSize.width / 2, y: containerSize.height / 2)
-
-                    ForEach(filteredObservations, id: \.uuid) { observation in
-                        let rect = boundingBoxRect(from: observation.boundingBox, in: displaySize, offset: CGSize(width: xOffset, height: yOffset))
-                        Rectangle()
-                            .stroke(Color.red, lineWidth: 2)
-                            .frame(width: rect.width, height: rect.height)
-                            .position(x: rect.midX, y: rect.midY)
-
-                        Text(observation.labels.first?.identifier ?? "Unknown")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .padding(4)
-                            .background(Color.black.opacity(0.6))
-                            .foregroundColor(.white)
-                            .cornerRadius(4)
-                            .position(x: rect.minX + 20, y: rect.minY + 10)
-                    }
-                }
-                .frame(width: containerSize.width, height: containerSize.height)
-            }
-            .padding(.horizontal)
-
-            if !croppedImages.isEmpty {
-                Text("Cropped Sections")
-                    .font(.headline)
-                    .padding(.top)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(croppedImages, id: \.self) { croppedImage in
-                            Image(uiImage: croppedImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 100, height: 100)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray, lineWidth: 1)
-                                )
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                }
+            if !filteredObservations.isEmpty {
+                croppedSectionsView()
             }
         }
         .onAppear {
@@ -88,6 +33,9 @@ struct AnnotatedImageView: View {
         }
         .onChange(of: observations) { newObservations in
             self.filteredObservations = newObservations
+            self.updateCroppedImagesList()
+        }
+        .onChange(of: filteredObservations) { _ in
             self.updateCroppedImagesList()
         }
     }
@@ -130,6 +78,92 @@ struct AnnotatedImageView: View {
         let pixelY = (1 - normalizedRect.origin.y - normalizedRect.height) * uprightImageSize.height
 
         return CGRect(x: pixelX, y: pixelY, width: pixelWidth, height: pixelHeight)
+    }
+
+    @ViewBuilder
+    private func detectedObjectsView() -> some View {
+        GeometryReader { geo in
+            let imageSize = image.size
+            let containerSize = geo.size
+            let scale = min(containerSize.width / imageSize.width,
+                            containerSize.height / imageSize.height)
+            let displaySize = CGSize(width: imageSize.width * scale,
+                                     height: imageSize.height * scale)
+            let xOffset = (containerSize.width - displaySize.width) / 2
+            let yOffset = (containerSize.height - displaySize.height) / 2
+
+            ZStack {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: displaySize.width, height: displaySize.height)
+                    .position(x: containerSize.width / 2, y: containerSize.height / 2)
+
+                ForEach(filteredObservations, id: \.uuid) { observation in
+                    let rect = boundingBoxRect(from: observation.boundingBox, in: displaySize, offset: CGSize(width: xOffset, height: yOffset))
+                    Rectangle()
+                        .stroke(Color.red, lineWidth: 2)
+                        .frame(width: rect.width, height: rect.height)
+                        .position(x: rect.midX, y: rect.midY)
+
+                    Text(observation.labels.first?.identifier ?? "Unknown")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .padding(4)
+                        .background(Color.black.opacity(0.6))
+                        .foregroundColor(.white)
+                        .cornerRadius(4)
+                        .position(x: rect.minX + 20, y: rect.minY + 10)
+                }
+            }
+            .frame(width: containerSize.width, height: containerSize.height)
+        }
+        .padding(.horizontal)
+    }
+
+    @ViewBuilder
+    private func croppedSectionsView() -> some View {
+        VStack {
+            Text("Cropped Sections")
+                .font(.headline)
+                .padding(.top)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(filteredObservations, id: \.uuid) { observation in
+
+                        let cropRect = boundingBoxInPixelsForCropping(from: observation.boundingBox, forImage: image)
+                        if let croppedImage = image.cropped(toPixelRect: cropRect) {
+                            ZStack(alignment: .topTrailing) {
+                                Image(uiImage: croppedImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.gray, lineWidth: 1)
+                                    )
+
+                                Button(action: {
+                                    withAnimation {
+                                        filteredObservations.removeAll { $0.uuid == observation.uuid }
+                                    }
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .font(.title2)
+                                        .foregroundColor(.red)
+                                        .background(Circle().fill(Color.white.opacity(0.75)))
+                                        .padding(2)
+                                }
+                                .padding(EdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 4))
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.bottom)
+            }
+        }
     }
 }
 
