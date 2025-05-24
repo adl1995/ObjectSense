@@ -256,6 +256,7 @@
 				DEVELOPMENT_TEAM = T94RC9UTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take photo for object recognition.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save extracted photos to your library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -285,6 +286,7 @@
 				DEVELOPMENT_TEAM = T94RC9UTQ2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Take photo for object recognition.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Save extracted photos to your library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
