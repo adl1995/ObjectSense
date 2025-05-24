@@ -110,10 +110,12 @@ struct AnnotatedImageView: View {
 
     func boundingBoxRect(from normalized: CGRect, in displaySize: CGSize, offset: CGSize) -> CGRect {
         let x = normalized.origin.x * displaySize.width + offset.width
-        // Vision's origin is bottom-left, UIKit's is top-left → flip y for display
-        // The y-coordinate needs to be flipped, and then the height of the box itself needs to be added
-        // to shift the origin from bottom-left (Vision) to top-left (SwiftUI).
-        let y = (1 - normalized.origin.y - normalized.height) * displaySize.height + offset.height + normalized.height * displaySize.height
+        // Vision's origin is bottom-left. SwiftUI's origin is top-left.
+        // To get the y-coordinate of the top edge of the box in SwiftUI's system:
+        // 1. (normalized.origin.y + normalized.height) gives the y-coordinate of the top edge from the bottom in Vision's system.
+        // 2. (1 - (normalized.origin.y + normalized.height)) flips this to be from the top in a normalized top-left system.
+        // This is equivalent to (1 - normalized.origin.y - normalized.height).
+        let y = (1 - normalized.origin.y - normalized.height) * displaySize.height + offset.height
         let width = normalized.width * displaySize.width
         let height = normalized.height * displaySize.height
         return CGRect(x: x, y: y, width: width, height: height)
