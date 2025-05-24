@@ -95,8 +95,8 @@ struct AnnotatedImageView: View {
     func updateCroppedImagesList() {
         var newCroppedImages: [UIImage] = []
         for observation in filteredObservations {
-            let rect = boundingBoxInPixels(from: observation.boundingBox, imageSize: image.size)
-            if let cropped = image.cropped(to: rect) {
+            let rect = boundingBoxInPixelsForCropping(from: observation.boundingBox, forImage: image)
+            if let cropped = image.cropped(toPixelRect: rect) {
                 newCroppedImages.append(cropped)
             }
         }
@@ -121,30 +121,54 @@ struct AnnotatedImageView: View {
         return CGRect(x: x, y: y, width: width, height: height)
     }
     
-    func boundingBoxInPixels(from normalized: CGRect, imageSize: CGSize) -> CGRect {
-        let width = normalized.width * imageSize.width
-        let height = normalized.height * imageSize.height
-        let x = normalized.origin.x * imageSize.width
-        // Vision's origin is bottom-left, UIKit's is top-left → flip y
-        let y = (1 - normalized.origin.y - normalized.height) * imageSize.height
-        return CGRect(x: x, y: y, width: width, height: height)
+    func boundingBoxInPixelsForCropping(from normalizedRect: CGRect, forImage image: UIImage) -> CGRect {
+        let uprightImageSize = image.uprightSize()
+
+        let pixelWidth = normalizedRect.width * uprightImageSize.width
+        let pixelHeight = normalizedRect.height * uprightImageSize.height
+        let pixelX = normalizedRect.origin.x * uprightImageSize.width
+        let pixelY = (1 - normalizedRect.origin.y - normalizedRect.height) * uprightImageSize.height
+
+        return CGRect(x: pixelX, y: pixelY, width: pixelWidth, height: pixelHeight)
     }
 }
 
 extension UIImage {
-    func cropped(to rect: CGRect) -> UIImage? {
-        let imageRect = CGRect(origin: .zero, size: self.size)
-        guard imageRect.contains(rect) else { return nil }
+    // Returns the size of the image as if its orientation is UIImage.Orientation.up
+    func uprightSize() -> CGSize {
+        switch self.imageOrientation {
+        case .left, .right, .leftMirrored, .rightMirrored:
+            return CGSize(width: self.size.height, height: self.size.width)
+        default:
+            return self.size
+        }
+    }
 
-        let scaledRect = CGRect(x: rect.origin.x * self.scale,
-                                y: rect.origin.y * self.scale,
-                                width: rect.width * self.scale,
-                                height: rect.height * self.scale)
-
-        guard let cgImage = self.cgImage?.cropping(to: scaledRect) else {
+    // Expects a CGRect in pixel coordinates relative to the upright CGImage data.
+    func cropped(toPixelRect pixelRect: CGRect) -> UIImage? {
+        guard let cgImage = self.cgImage else {
+            print("Error: cgImage is nil")
             return nil
         }
-        return UIImage(cgImage: cgImage, scale: self.scale, orientation: self.imageOrientation)
+
+        // The pixelRect is already in the coordinate system of the cgImage (which is effectively upright).
+        // Ensure the pixelRect is within the bounds of the cgImage.
+        let cgImageBounds = CGRect(x: 0, y: 0, width: CGFloat(cgImage.width), height: CGFloat(cgImage.height))
+        
+        // Intersect the requested crop rect with the actual image bounds.
+        let validCropRect = pixelRect.intersection(cgImageBounds)
+
+        guard !validCropRect.isNull, validCropRect.width > 0, validCropRect.height > 0 else {
+            print("Error: Invalid crop rectangle after intersection. Original: \(pixelRect), Intersected: \(validCropRect), Image Bounds: \(cgImageBounds)")
+            return nil
+        }
+
+        guard let croppedCGImage = cgImage.cropping(to: validCropRect) else {
+            print("Error: cgImage.cropping failed for rect: \(validCropRect)")
+            return nil
+        }
+        
+        return UIImage(cgImage: croppedCGImage, scale: self.scale, orientation: self.imageOrientation)
     }
 }
 
