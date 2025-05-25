@@ -15,28 +15,24 @@ ObjectSense is an iOS application that demonstrates real-time object detection u
 *   **Editable Labels**: Allows users to view and edit the predicted label for each detected object.
 *   **Save Cropped Images**: Save the identified cropped sections to the photo library.
 
-## Screenshots
+## Demo Video
 
 <div align="center">
     <img src="images/recording.gif" alt="Demo video" width="40%" style="margin: auto; display: block;" />
 </div>
 
-<!-- Add your screenshots here. You can link them from an 'images' folder in your repository. -->
+## Setup and Running the Project
 
-**Main View (No Image Selected):**
-<!-- ![Main View Empty](images/screenshot_main_empty.png) -->
-
-**Image with Detections:**
-<!-- ![Detections View](images/screenshot_detections.png) -->
-
-**Cropped Sections with Editable Labels:**
-![Cropped Sections](images/screenshot_cropped_labels.png)
-
-## Demo Video
-
-<!-- Link to your project demonstration video. You can upload it to YouTube, Vimeo, or include it in your repository. -->
-
-[Watch the Demo Video](link_to_your_demo_video.mp4) <!-- Replace with actual link or file path -->
+1.  **Clone the Repository:**
+    ```bash
+    git clone https://github.com/adl1995/ObjectSense.git
+    cd ObjectSense
+    ```
+2.  **Open in Xcode:** Open the `ObjectSense.xcodeproj` file in Xcode.
+3.  **YOLO Core ML Model**: This project expects a `Yolo.mlpackage` or `Yolo.mlmodel` Core ML model file. 
+    *   If your model is named differently or not included, ensure you add your `.mlmodel` file to the project.
+    *   Update the `ModelHandler.swift` (or equivalent model loading code) if your model's class name is different from the one currently used.
+4.  **Build and Run:** Select a target device or simulator and run the app.
 
 ## Technologies Used
 
@@ -46,19 +42,6 @@ ObjectSense is an iOS application that demonstrates real-time object detection u
 *   **PhotosUI**: For picking images from the photo library.
 *   **AVFoundation**: For accessing the camera.
 
-## Setup and Running the Project
-
-1.  **Clone the Repository:**
-    ```bash
-    git clone https://github.com/adl1995/ObjectSense.git # Replace with your repo URL
-    cd ObjectSense
-    ```
-2.  **Open in Xcode:** Open the `ObjectSense.xcodeproj` file in Xcode.
-3.  **YOLO Core ML Model**: This project expects a `Yolo.mlpackage` or `Yolo.mlmodel` Core ML model file. 
-    *   If your model is named differently or not included, ensure you add your `.mlmodel` file to the project.
-    *   Update the `ModelHandler.swift` (or equivalent model loading code) if your model's class name is different from the one currently used.
-4.  **Build and Run:** Select a target device or simulator and run the app (Cmd+R).
-
 ## Future Enhancements / To-Do
 
 *   [ ] Real-time object detection from the live camera feed.
@@ -67,4 +50,4 @@ ObjectSense is an iOS application that demonstrates real-time object detection u
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details (you'll need to create this file if you choose to include one).
+This project is licensed under the MIT License.
