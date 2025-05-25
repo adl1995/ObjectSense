@@ -41,10 +41,14 @@ struct AnnotatedImageView: View {
     }
     
     func updateCroppedImagesList() {
+        let resizedImage = image.resized(to: CGSize(width: 384, height: 640))
+
         var newCroppedImages: [UIImage] = []
         for observation in filteredObservations {
-            let rect = boundingBoxInPixelsForCropping(from: observation.boundingBox, forImage: image)
-            if let cropped = image.cropped(toPixelRect: rect) {
+//            let rect = boundingBoxInPixelsForCropping(from: observation.boundingBox, forImage: image)
+            let croppedImage = cropImage(from: resizedImage, using: observation.boundingBox)
+//            if let cropped = image.cropped(toPixelRect: rect) {
+            if let cropped = croppedImage {
                 newCroppedImages.append(cropped)
             }
         }
@@ -69,15 +73,52 @@ struct AnnotatedImageView: View {
         return CGRect(x: x, y: y, width: width, height: height)
     }
     
+    // Renamed and updated to calculate pixel rect for cropping, respecting image orientation.
+    // This version directly uses cgImage dimensions for robustness.
     func boundingBoxInPixelsForCropping(from normalizedRect: CGRect, forImage image: UIImage) -> CGRect {
-        let uprightImageSize = image.uprightSize()
+        guard let cgImage = image.cgImage else {
+            print("Error: cgImage is nil in boundingBoxInPixelsForCropping. Cannot calculate crop rect.")
+            return .zero // Return zero rect if cgImage is not available
+        }
 
-        let pixelWidth = normalizedRect.width * uprightImageSize.width
-        let pixelHeight = normalizedRect.height * uprightImageSize.height
-        let pixelX = normalizedRect.origin.x * uprightImageSize.width
-        let pixelY = (1 - normalizedRect.origin.y - normalizedRect.height) * uprightImageSize.height
+        let cgImageWidth = CGFloat(cgImage.width)
+        let cgImageHeight = CGFloat(cgImage.height)
+
+        // Vision's normalized coordinates are relative to the upright image.
+        // cgImage.width and cgImage.height ARE the dimensions of this upright image in pixels.
+        
+        let pixelX = normalizedRect.origin.x * cgImageWidth
+        // Vision's origin is bottom-left. For cropping, CGImage uses top-left.
+        // So, y_pixel_top_left = (1 - normalized_y_bottom_left - normalized_height) * actual_pixel_height
+        let pixelY = (1 - normalizedRect.origin.y - normalizedRect.height) * cgImageHeight
+        let pixelWidth = normalizedRect.width * cgImageWidth
+        let pixelHeight = normalizedRect.height * cgImageHeight
 
         return CGRect(x: pixelX, y: pixelY, width: pixelWidth, height: pixelHeight)
+    }
+
+    func cropImage(from image: UIImage, using normalizedBoundingBox: CGRect) -> UIImage? {
+        guard let cgImage = image.cgImage else { return nil }
+        
+        let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+        
+        // Convert normalized Vision coordinates to original image pixel coordinates
+        // Vision uses bottom-left origin (0,0), we need top-left for Core Graphics
+        let x = normalizedBoundingBox.origin.x * imageSize.width
+        let y = (1 - normalizedBoundingBox.origin.y - normalizedBoundingBox.height) * imageSize.height
+        let width = normalizedBoundingBox.width * imageSize.width
+        let height = normalizedBoundingBox.height * imageSize.height
+        
+        // Create the crop rectangle in image pixel coordinates
+        let cropRect = CGRect(x: x, y: y, width: width, height: height)
+        
+        // Ensure the crop rectangle is within image bounds
+        let clampedRect = cropRect.intersection(CGRect(origin: .zero, size: imageSize))
+        
+        // Crop the image
+        guard let croppedCGImage = cgImage.cropping(to: clampedRect) else { return nil }
+        
+        return UIImage(cgImage: croppedCGImage, scale: image.scale, orientation: image.imageOrientation)
     }
 
     @ViewBuilder
@@ -131,8 +172,11 @@ struct AnnotatedImageView: View {
                 HStack(spacing: 10) {
                     ForEach(filteredObservations, id: \.uuid) { observation in
 
-                        let cropRect = boundingBoxInPixelsForCropping(from: observation.boundingBox, forImage: image)
-                        if let croppedImage = image.cropped(toPixelRect: cropRect) {
+//                        let cropRect = boundingBoxInPixelsForCropping(from: observation.boundingBox, forImage: image)
+                        let resizedImage = image.resized(to: CGSize(width: 384, height: 640))
+
+                        let _croppedImage = cropImage(from: resizedImage, using: observation.boundingBox)
+                        if let croppedImage = _croppedImage {
                             ZStack(alignment: .topTrailing) {
                                 Image(uiImage: croppedImage)
                                     .resizable()
