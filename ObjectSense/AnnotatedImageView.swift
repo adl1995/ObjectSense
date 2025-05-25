@@ -13,6 +13,7 @@ struct AnnotatedImageView: View {
     let observations: [VNRecognizedObjectObservation]
     @State var filteredObservations: [VNRecognizedObjectObservation] = []
     @Binding var croppedImages: [UIImage]
+    @State private var editableLabels: [UUID: String] = [:]
     
     var body: some View {
         VStack {
@@ -29,13 +30,21 @@ struct AnnotatedImageView: View {
         }
         .onAppear {
             self.filteredObservations = observations
+            self.updateEditableLabels(for: observations)
             self.updateCroppedImagesList()
         }
         .onChange(of: observations) { newObservations in
             self.filteredObservations = newObservations
+            self.updateEditableLabels(for: newObservations)
             self.updateCroppedImagesList()
         }
-        .onChange(of: filteredObservations) { _ in
+        .onChange(of: filteredObservations) { updatedObservations in
+            let currentObservationUUIDs = Set(updatedObservations.map { $0.uuid })
+            for uuid in editableLabels.keys {
+                if !currentObservationUUIDs.contains(uuid) {
+                    editableLabels[uuid] = nil
+                }
+            }
             self.updateCroppedImagesList()
         }
     }
@@ -140,31 +149,44 @@ struct AnnotatedImageView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(filteredObservations, id: \.uuid) { observation in
+                        // Crop the image using the bounding box of the observation
                         let resizedImage = self.image.resized(to: CGSize(width: 384, height: 640))
-                        if let croppedImage = cropImage(from: resizedImage, using: observation.boundingBox) {
-                            ZStack(alignment: .topTrailing) {
-                                Image(uiImage: croppedImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 100, height: 100)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray, lineWidth: 1)
-                                    )
 
-                                Button(action: {
-                                    withAnimation {
-                                        filteredObservations.removeAll { $0.uuid == observation.uuid }
+                        if let croppedImage = cropImage(from: resizedImage, using: observation.boundingBox) {
+                            VStack(alignment: .center, spacing: 4) {
+                                ZStack(alignment: .topTrailing) {
+                                    Image(uiImage: croppedImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 100, height: 100)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.gray, lineWidth: 1)
+                                        )
+
+                                    Button(action: {
+                                        withAnimation {
+                                            filteredObservations.removeAll { $0.uuid == observation.uuid }
+                                        }
+                                    }) {
+                                        Image(systemName: "minus.circle.fill")
+                                            .font(.title2)
+                                            .foregroundColor(.red)
+                                            .background(Circle().fill(Color.white.opacity(0.75)))
+                                            .padding(2)
                                     }
-                                }) {
-                                    Image(systemName: "minus.circle.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.red)
-                                        .background(Circle().fill(Color.white.opacity(0.75)))
-                                        .padding(2)
+                                    .padding(EdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 4))
                                 }
                                 .padding(EdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 4))
+                                
+                                TextField("Label", text: bindingForObservationLabel(uuid: observation.uuid))
+                                    .font(.caption)
+                                    .multilineTextAlignment(.center)
+                                    .padding(4)
+                                    .background(Color(UIColor.systemGray6))
+                                    .cornerRadius(4)
+                                    .frame(width: 100)
                             }
                         }
                     }
@@ -173,6 +195,25 @@ struct AnnotatedImageView: View {
                 .padding(.bottom)
             }
         }
+    }
+    
+    private func updateEditableLabels(for observations: [VNRecognizedObjectObservation]) {
+        var newLabels: [UUID: String] = [:]
+        for observation in observations {
+            newLabels[observation.uuid] = observation.labels.first?.identifier ?? "Unknown"
+        }
+        self.editableLabels = newLabels
+    }
+    
+    private func bindingForObservationLabel(uuid: UUID) -> Binding<String> {
+        Binding<String>(
+            get: { self.editableLabels[uuid] ?? "Unknown" },
+            set: { newValue in
+                if self.editableLabels[uuid] != newValue {
+                    self.editableLabels[uuid] = newValue
+                }
+            }
+        )
     }
 }
 
