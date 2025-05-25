@@ -2,21 +2,9 @@
 
 ObjectSense is an iOS application that demonstrates real-time object detection using the YOLO model with Core ML. Users can select images from their photo library or take new photos with the camera. The app then identifies objects within the image, draws bounding boxes around them, and allows users to view and edit the predicted labels. This removes the hassle of manually taking inventory photos and helps in creating a home inventory system efficiently.
 
-<!-- <p align="center">
-	<img src="images/homescreen.jpg" alt="input_1" style="width:350px;"/>
-	<img src="images/detected-objects.jpg" alt="input_1" style="width:350px;"/>
-</p> -->
-
-<p align="center">
-    <div alt="input_1" style="width:350px;">
-        <h3 style="margin-bottom: 10px;">Main View</h3>
-	    <img src="images/homescreen.jpg"/>
-    </div>
-    <div alt="input_1" style="width:350px;">
-        <h3 style="margin-bottom: 10px;"> Labels</h3>
-	    <img src="images/detected-objects.jpg"/>
-    </div>
-</p>
+| Main View | Cropped Sections with Editable Labels |
+|:-:|:-:|
+| ![Home screen](images/homescreen.jpg) | ![Result](images/detected-objects.jpg) |
 
 ## Features
 
