@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct CustomMLApp: App {
+struct ObjectSenseApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
