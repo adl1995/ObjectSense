@@ -2,9 +2,21 @@
 
 ObjectSense is an iOS application that demonstrates real-time object detection using the YOLO model with Core ML. Users can select images from their photo library or take new photos with the camera. The app then identifies objects within the image, draws bounding boxes around them, and allows users to view and edit the predicted labels. This removes the hassle of manually taking inventory photos and helps in creating a home inventory system efficiently.
 
-<!-- Placeholder for a banner image or a key screenshot -->
-![Home screen](images/homescreen.jpg)
-![Result](images/detected-objects.jpg)
+<!-- <p align="center">
+	<img src="images/homescreen.jpg" alt="input_1" style="width:350px;"/>
+	<img src="images/detected-objects.jpg" alt="input_1" style="width:350px;"/>
+</p> -->
+
+<p align="center">
+    <div alt="input_1" style="width:350px;">
+        <h3 style="margin-bottom: 10px;">Main View</h3>
+	    <img src="images/homescreen.jpg"/>
+    </div>
+    <div alt="input_1" style="width:350px;">
+        <h3 style="margin-bottom: 10px;"> Labels</h3>
+	    <img src="images/detected-objects.jpg"/>
+    </div>
+</p>
 
 ## Features
 
@@ -17,7 +29,9 @@ ObjectSense is an iOS application that demonstrates real-time object detection u
 
 ## Screenshots
 
-![Demo video](images/recording.gif)
+<div align="center">
+    <img src="images/recording.gif" alt="Demo video" width="40%" style="margin: auto; display: block;" />
+</div>
 
 <!-- Add your screenshots here. You can link them from an 'images' folder in your repository. -->
 
@@ -28,7 +42,7 @@ ObjectSense is an iOS application that demonstrates real-time object detection u
 <!-- ![Detections View](images/screenshot_detections.png) -->
 
 **Cropped Sections with Editable Labels:**
-<!-- ![Cropped Sections](images/screenshot_cropped_labels.png) -->
+![Cropped Sections](images/screenshot_cropped_labels.png)
 
 ## Demo Video
 
